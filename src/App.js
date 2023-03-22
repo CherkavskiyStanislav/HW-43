@@ -1,5 +1,7 @@
 import React, {useState} from "react";
 import Product from "./components/Product";
+import { v4 as uuid } from 'uuid';
+import Add from "./components/Add";
 
 function App () {
 
@@ -8,7 +10,31 @@ function App () {
   {name: 'Watch', price: 100, id: 2},
   ];
   const [products, setProducts] = useState(productsList)
-  const [newProducts, setNewProducts] = useState({name: '', price: 0.01, id: 3})
+  const [newProducts, setNewProducts] = useState({ name: '', price: '', id: uuid() });
+  const [nameError, setNameError] = useState('');
+  const [priceError, setPriceError] = useState('');
+
+  const validateName = () => {
+    const name = newProducts.name.trim();
+    if (name.length < 2) {
+      setNameError('The name of the product must write more than one liter');
+      return false;
+    } else {
+      setNameError('');
+      return true;
+    }
+  }
+
+  const validatePrice = () => {
+    const price = parseFloat(newProducts.price);
+    if (Number(newProducts.price) <= 0) {
+      setPriceError('The price of the product must be greater than 0');
+      return false;
+    } else {
+      setPriceError('');
+      return true;
+    }
+  }
 
   const changeName = (e)=>{
    setNewProducts((prev)=>({...prev, name: e.target.value}))
@@ -19,9 +45,20 @@ function App () {
   }
 
   const addProducts = () => {
-    let key = Math.random();
-    setNewProducts((prev)=>({...prev, id: key}))
-    setProducts((prev) => ([...prev, newProducts]))
+    const isNameValid = validateName();
+    const isPriceValid = validatePrice();
+    if (isNameValid && isPriceValid) {
+      setProducts((prev) => ([...prev, {name: newProducts.name, price: newProducts.price, id: uuid()}]))
+      setNewProducts({ name: '', price: '', id: uuid() });
+    }
+  }
+
+  const handleNameBlur = () => {
+    validateName();
+  }
+  
+  const handlePriceBlur = () => {
+    validatePrice();
   }
 
   const removeProduct = (id) => {
@@ -31,15 +68,25 @@ function App () {
 
 return (
 <div className="wrapper">
-  <div className="add">
-    <label>Product name</label>
-    <input onInput={changeName} type="text" />
-    <label>Product price</label>
-    <input onInput={changePrice} type="number" />
-    <button onClick={addProducts} type="button">Add</button>
-  </div>
+<Add 
+  handleNameBlur={handleNameBlur} 
+  handlePriceBlur={handlePriceBlur} 
+  newProducts={newProducts} 
+  setNewProducts={setNewProducts} 
+  nameError={nameError} 
+  priceError={priceError} 
+  addProducts={addProducts}
+/>
   <div className="list">
-    {products.map(product => <Product onRemove={removeProduct} key={product.id} id={product.id} name={product.name} price={`${product.price} $`} />)}
+    {products.map(product => 
+      <Product 
+        onRemove={removeProduct} 
+        key={product.id} 
+        id={product.id} 
+        name={product.name} 
+        price={`${product.price} $`} 
+      />)
+    }
   </div>
 </div> 
 );
